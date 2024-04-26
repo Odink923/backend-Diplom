@@ -1,7 +1,9 @@
 const ApiError = require('../error/ApiError')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const {User,Basket} = require('../models/models')
+const {User} = require('../models/models')
+const uuid = require("uuid");
+const mailService = require('../service/mailService')
 
 const generateJwt = (id,email,role) =>{
     return jwt.sign(
@@ -21,8 +23,9 @@ class UserController{
             return next(ApiError.badRequest("User already exist"))
         }
         const hashPassword = await bcrypt.hash(password,5)
-        const user = await User.create({email,role,password:hashPassword})
-        const basket = await Basket.create({userId:user.id})
+        const activationLink = uuid.v4();
+        const user = await User.create({email,role,password:hashPassword, activationLink})
+        await mailService.sendActivationMail(email, `${process.env.API_URL}/api/user/activate/${activationLink}`);
         const token = generateJwt(user.id,user.email,user.role);
         return res.json({token})
     }
@@ -38,6 +41,21 @@ class UserController{
         }
         const token = generateJwt(user.id,user.email,user.role)
         return res.json({token})
+    }
+
+    async activate(req,res,next){
+        try {
+            const activationLink = req.params.link;
+            const user = await User.findOne({where:{activationLink}})
+            if(!user){
+                throw ApiError.badRequest('Некоректна силка активації')
+            }
+            user.isActivated = true;
+            await user.save();
+            return res.redirect(process.env.CLIENT_URL);
+        }catch (e){
+            next(e);
+        }
     }
 
     async logout(){

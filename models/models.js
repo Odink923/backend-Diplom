@@ -28,15 +28,6 @@ const Token = sequelize.define('token', {
 });
 
 
-const Basket = sequelize.define('basket',
-    {
-        id: {type: DataTypes.INTEGER,primaryKey:true, autoIncrement: true},
-    })
-const BasketAppointment = sequelize.define('basket_appointment',
-    {
-        id: {type: DataTypes.INTEGER,primaryKey:true, autoIncrement: true},
-    })
-
 const Appointment = sequelize.define('appointment',
     {
         id: {type: DataTypes.INTEGER,primaryKey:true, autoIncrement: true},
@@ -65,18 +56,16 @@ const TypeActivity = sequelize.define('type_activity',{
     id: {type:DataTypes.INTEGER,primaryKey:true,autoIncrement:true},
 })
 
-User.hasOne(Basket)
-Basket.belongsTo(User)
+
 
 User.hasMany(UserInfo)
 UserInfo.belongsTo(User)
 
+User.hasMany(Appointment)
+Appointment.belongsTo(User)
+
 User.hasMany(Token, { as: 'tokens' });
 Token.belongsTo(User);
-
-
-Basket.hasMany(BasketAppointment)
-BasketAppointment.belongsTo(Basket)
 
 Type.hasMany(Appointment)
 Appointment.belongsTo(Type)
@@ -84,9 +73,6 @@ Appointment.belongsTo(Type)
 Activity.hasMany(Appointment)
 Appointment.belongsTo(Activity)
 
-
-Appointment.hasMany(BasketAppointment)
-BasketAppointment.belongsTo(Appointment)
 
 Appointment.hasMany(AppointmentInfo,{as:'info'})
 AppointmentInfo.belongsTo(Appointment)
@@ -98,8 +84,6 @@ module.exports={
     Token,
     User,
     UserInfo,
-    Basket,
-    BasketAppointment,
     Appointment,
     Type,
     Activity,
